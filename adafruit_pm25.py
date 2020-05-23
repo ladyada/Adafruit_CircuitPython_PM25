@@ -53,30 +53,9 @@ import time
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_PM25.git"
 
-class PM25_I2C:
-    """
-    A driver for the PM2.5 Air quality sensor over I2C
-    """
 
-    def __init__(self, i2c_bus, reset_pin=None, address=0x12):
-        if reset_pin:
-            # Reset device
-            reset_pin.direction = Direction.OUTPUT
-            reset_pin.value = False
-            time.sleep(0.01)
-            reset_pin.value = True
-            # it takes at least a second to start up
-            time.sleep(1)
-
-        for _ in range(5): # try a few times, it can be sluggish
-            try:
-                self.i2c_device = I2CDevice(i2c_bus, address)
-                break
-            except ValueError:
-                time.sleep(1)
-                continue
-        else:
-            raise RuntimeError("Unable to find PM2.5 device")
+class PM25:
+    def __init__(self):
         # rad, ok make our internal buffer!
         self._buffer = bytearray(32)
         self.aqi_reading = {
@@ -94,12 +73,6 @@ class PM25_I2C:
             "particles 100um": None,
         }
 
-    def _read_into_buffer(self):
-        with self.i2c_device as i2c:
-            try:
-                i2c.readinto(self._buffer)
-            except OSError as e:
-                raise RuntimeError("Unable to read from PM2.5 over I2C")
 
     def read(self):
         self._read_into_buffer()
@@ -126,3 +99,39 @@ class PM25_I2C:
         self.aqi_reading["particles 25um"], self.aqi_reading["particles 50um"], self.aqi_reading["particles 100um"] = frame
 
         return self.aqi_reading
+
+
+
+class PM25_I2C(PM25):
+    """
+    A driver for the PM2.5 Air quality sensor over I2C
+    """
+
+    def __init__(self, i2c_bus, reset_pin=None, address=0x12):
+        if reset_pin:
+            # Reset device
+            reset_pin.direction = Direction.OUTPUT
+            reset_pin.value = False
+            time.sleep(0.01)
+            reset_pin.value = True
+            # it takes at least a second to start up
+            time.sleep(1)
+
+        for _ in range(5): # try a few times, it can be sluggish
+            try:
+                self.i2c_device = I2CDevice(i2c_bus, address)
+                break
+            except ValueError:
+                time.sleep(1)
+                continue
+        else:
+            raise RuntimeError("Unable to find PM2.5 device")
+        super().__init__()
+
+    def _read_into_buffer(self):
+        with self.i2c_device as i2c:
+            try:
+                i2c.readinto(self._buffer)
+            except OSError as e:
+                raise RuntimeError("Unable to read from PM2.5 over I2C")
+
