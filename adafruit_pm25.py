@@ -135,3 +135,36 @@ class PM25_I2C(PM25):
             except OSError as e:
                 raise RuntimeError("Unable to read from PM2.5 over I2C")
 
+class PM25_UART(PM25):
+    """
+    A driver for the PM2.5 Air quality sensor over UART
+    """
+
+    def __init__(self, uart, reset_pin=None):
+        if reset_pin:
+            # Reset device
+            reset_pin.direction = Direction.OUTPUT
+            reset_pin.value = False
+            time.sleep(0.01)
+            reset_pin.value = True
+            # it takes at least a second to start up
+            time.sleep(1)
+
+        self._uart = uart
+        super().__init__()
+
+    def _read_into_buffer(self):
+        b = self._uart.read(1)
+        if not b:
+            raise RuntimeError("Unable to read from PM2.5 UART")
+        b = b[0]
+        if b != 0x42:
+            raise RuntimeError("Unable to read from PM2.5 UART")
+        self._buffer[0] = b  # read one byte
+
+        remain = self._uart.read(31)
+        if not remain or len(remain) != 31:
+            raise RuntimeError("Unable to read from PM2.5 UART")
+        for i in range(31):
+            self._buffer[i+1] = remain[i] 
+        #print([hex(i) for i in self._buffer])
