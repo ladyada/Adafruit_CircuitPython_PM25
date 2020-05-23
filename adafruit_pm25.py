@@ -56,6 +56,7 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_PM25.git"
 class PM25:
     """Super-class for generic PM2.5 sensors. Subclasses must implement
     _read_into_buffer to fill self._buffer with a packet of data"""
+
     def __init__(self):
         # rad, ok make our internal buffer!
         self._buffer = bytearray(32)
@@ -82,7 +83,7 @@ class PM25:
         """Read any available data from the air quality sensor and
         return a dictionary with available particulate/quality data"""
         self._read_into_buffer()
-        #print([hex(i) for i in self._buffer])
+        # print([hex(i) for i in self._buffer])
 
         # check packet header
         if (self._buffer[0] != 0x42) or (self._buffer[1] != 0x4D):
@@ -100,21 +101,22 @@ class PM25:
 
         # unpack data
         frame = struct.unpack(">HHHHHHHHHHHH", self._buffer[4:28])
-        self.aqi_reading["pm10 standard"], \
-        self.aqi_reading["pm25 standard"], \
-        self.aqi_reading["pm100 standard"], \
-        self.aqi_reading["pm10 env"], \
-        self.aqi_reading["pm25 env"], \
-        self.aqi_reading["pm100 env"], \
-        self.aqi_reading["particles 03um"], \
-        self.aqi_reading["particles 05um"], \
-        self.aqi_reading["particles 10um"], \
-        self.aqi_reading["particles 25um"], \
-        self.aqi_reading["particles 50um"], \
-        self.aqi_reading["particles 100um"] = frame
+        (
+            self.aqi_reading["pm10 standard"],
+            self.aqi_reading["pm25 standard"],
+            self.aqi_reading["pm100 standard"],
+            self.aqi_reading["pm10 env"],
+            self.aqi_reading["pm25 env"],
+            self.aqi_reading["pm100 env"],
+            self.aqi_reading["particles 03um"],
+            self.aqi_reading["particles 05um"],
+            self.aqi_reading["particles 10um"],
+            self.aqi_reading["particles 25um"],
+            self.aqi_reading["particles 50um"],
+            self.aqi_reading["particles 100um"],
+        ) = frame
 
         return self.aqi_reading
-
 
 
 class PM25_I2C(PM25):
@@ -132,7 +134,7 @@ class PM25_I2C(PM25):
             # it takes at least a second to start up
             time.sleep(1)
 
-        for _ in range(5): # try a few times, it can be sluggish
+        for _ in range(5):  # try a few times, it can be sluggish
             try:
                 self.i2c_device = I2CDevice(i2c_bus, address)
                 break
@@ -149,6 +151,7 @@ class PM25_I2C(PM25):
                 i2c.readinto(self._buffer)
             except OSError:
                 raise RuntimeError("Unable to read from PM2.5 over I2C")
+
 
 class PM25_UART(PM25):
     """
@@ -181,5 +184,5 @@ class PM25_UART(PM25):
         if not remain or len(remain) != 31:
             raise RuntimeError("Unable to read from PM2.5 UART")
         for i in range(31):
-            self._buffer[i+1] = remain[i]
-        #print([hex(i) for i in self._buffer])
+            self._buffer[i + 1] = remain[i]
+        # print([hex(i) for i in self._buffer])
