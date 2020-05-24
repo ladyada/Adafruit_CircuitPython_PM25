@@ -6,8 +6,8 @@ Example sketch to connect to PM2.5 sensor with either I2C or UART.
 import time
 import board
 import busio
-import adafruit_pm25
 from digitalio import DigitalInOut, Direction, Pull
+import adafruit_pm25
 
 reset_pin = None
 # If you have a GPIO, its not a bad idea to connect it to the RESET pin
